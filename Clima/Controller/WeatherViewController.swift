@@ -8,17 +8,56 @@
 
 import UIKit
 
-class WeatherViewController: UIViewController {
+class WeatherViewController: UIViewController, UITextFieldDelegate, WeatherManagerDelegate {
 
+    var weatherManager = WeatherManager()
+    
+    @IBOutlet weak var searchTextField: UITextField!
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        searchTextField.delegate = self
+        weatherManager.delegate = self
     }
 
-
+    @IBAction func searchPressed(_ sender: UIButton) {
+        searchTextField.endEditing(true)
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        searchTextField.endEditing(true)
+        return true
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        if let city = searchTextField.text {
+            weatherManager.fetchWeather(city)
+        }
+        searchTextField.text = ""
+    }
+    
+    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        if searchTextField.text != "" {
+            return true
+        } else {
+            searchTextField.placeholder = "Type something please"
+            return false
+        }
+    }
+    
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
+        DispatchQueue.main.async {
+            self.temperatureLabel.text = weather.temperatureString
+            self.conditionImageView.image = UIImage(systemName: weather.conditionName)
+            self.cityLabel.text = weather.cityName
+        }
+    }
+    
+    func didFailWithError(error: Error) {
+        print(error)
+    }
+    
 }
-
